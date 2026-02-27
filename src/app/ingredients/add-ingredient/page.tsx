@@ -3,12 +3,14 @@ import { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { db } from '@/services/firebase';
+import { useUserStore } from '@/store/userStore';
 import { Collections } from '@/types/collections';
 import InputText from '@/components/ui/InputText';
 import Screen from '@/components/ui/Screen';
 import SubmitButton from '@/components/ui/SubmitButton';
 
 export default function AddIngredientPage() {
+  const { user } = useUserStore();
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [calories, setCalories] = useState('');
@@ -17,6 +19,10 @@ export default function AddIngredientPage() {
   const [fats, setFats] = useState('');
 
   const handleSubmit = async () => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para añadir ingredientes.');
+      return;
+    }
     if (!name || !calories || !proteins || !carbs || !fats) {
       toast.error('Por favor completa todos los campos obligatorios.');
       return;
