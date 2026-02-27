@@ -51,17 +51,25 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
     }
   };
 
-  return (
-    <button
-      className={`flex w-full items-center bg-item-background p-4 rounded-lg text-left transition-opacity cursor-pointer ${
-        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
-      }`}
-      onClick={controlType !== SettingsControlType.SWITCH ? onPress : undefined}
-      disabled={disabled}
-    >
+  const isSwitch = controlType === SettingsControlType.SWITCH;
+  const containerClass = `flex w-full items-center bg-item-background p-4 rounded-lg text-left transition-opacity cursor-pointer ${
+    disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
+  }`;
+  const content = (
+    <>
       {icon && <span className={`${textColor} mr-4 flex-shrink-0`}>{icon}</span>}
       <span className={`flex-1 ${textColor} text-base`}>{label}</span>
       <div>{renderControl()}</div>
+    </>
+  );
+
+  if (isSwitch) {
+    return <div className={containerClass}>{content}</div>;
+  }
+
+  return (
+    <button className={containerClass} onClick={onPress} disabled={disabled}>
+      {content}
     </button>
   );
 };
