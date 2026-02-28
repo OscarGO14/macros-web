@@ -38,7 +38,7 @@ export default function LoginPage() {
 
   return (
     <Screen>
-      <div className="flex min-h-[calc(100dvh-2rem)] items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <div className="w-full max-w-md flex flex-col gap-4">
           <h1 className="mb-8 text-3xl font-bold text-primary">Iniciar Sesión</h1>
 
