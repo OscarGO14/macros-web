@@ -1,5 +1,6 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import { createPortal } from 'react-dom';
 import ActionButton from '@/components/ui/ActionButton';
 import { ConfirmationModalProps } from './types';
 
@@ -9,24 +10,18 @@ export default function ConfirmationModal({
   handleConfirm,
   message,
 }: ConfirmationModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  if (!isVisible) return null;
 
-  useEffect(() => {
-    if (isVisible) {
-      dialogRef.current?.showModal();
-    } else {
-      dialogRef.current?.close();
-    }
-  }, [isVisible]);
-
-  return (
-    <dialog
-      ref={dialogRef}
-      onClose={onClose}
-      onClick={(e) => e.target === dialogRef.current && onClose()}
-      className="backdrop:bg-black/80 bg-transparent w-full max-w-sm rounded-lg p-0"
-    >
-      <div className="bg-item-background rounded-lg p-5 flex flex-col gap-4 shadow-lg">
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end">
+      <div
+        className="fixed inset-0 bg-black/80"
+        onClick={onClose}
+      />
+      <div
+        className="relative w-full bg-item-background rounded-t-2xl shadow-lg p-5 flex flex-col gap-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <p className="text-center text-primary text-base font-bold">{message}</p>
         <ActionButton
           color="accent"
@@ -38,6 +33,7 @@ export default function ConfirmationModal({
         />
         <ActionButton color="primary" label="Cancelar" onPress={onClose} />
       </div>
-    </dialog>
+    </div>,
+    document.body
   );
 }
