@@ -58,7 +58,7 @@ export default function RegisterPage() {
 
   return (
     <Screen>
-      <div className="flex min-h-[calc(100vh-2rem)] items-center justify-center">
+      <div className="flex min-h-[calc(100dvh-2rem)] items-center justify-center">
         <div className="w-full max-w-md flex flex-col gap-4">
           <h1 className="mb-8 text-3xl font-bold text-primary">Crear Cuenta</h1>
 

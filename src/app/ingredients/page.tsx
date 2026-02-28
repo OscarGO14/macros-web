@@ -10,7 +10,7 @@ export default function IngredientsPage() {
 
   return (
     <Screen>
-      <div className="flex flex-col justify-evenly min-h-[calc(100vh-2rem)]">
+      <div className="flex flex-col justify-evenly min-h-[calc(100dvh-2rem)]">
         <div className="flex flex-col items-center justify-center gap-4">
           <Advice information="Los ingredientes y recetas no son editables por ahora." />
           <h1 className="text-primary text-2xl font-bold">Gestor de Ingredientes</h1>
