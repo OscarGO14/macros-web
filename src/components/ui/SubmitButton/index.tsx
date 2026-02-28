@@ -5,7 +5,7 @@ export default function SubmitButton({ onPress, label, disabled = false }: Submi
   return (
     <button
       className={`bg-accent rounded-lg p-4 w-full flex items-center justify-center cursor-pointer transition-opacity ${
-        disabled ? 'opacity-50 cursor-not-allowed' : 'opacity-100 hover:opacity-90'
+        disabled ? 'opacity-50 cursor-not-allowed' : 'opacity-100 hover:opacity-90 active:opacity-70'
       }`}
       onClick={onPress}
       disabled={disabled}

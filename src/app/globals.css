@@ -45,4 +45,6 @@
 body {
   background-color: #181920;
   color: #FFFFFF;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
 }
