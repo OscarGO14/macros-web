@@ -46,7 +46,7 @@ export default function DashboardPage() {
 
   return (
     <Screen>
-      <div className="flex flex-col items-center justify-evenly gap-4 min-h-[calc(100vh-2rem)]">
+      <div className="flex flex-col items-center justify-evenly gap-4 min-h-[calc(100dvh-2rem)]">
         <div className="flex items-center justify-center">
           <p className="text-xl text-primary text-center py-4">
             Hola {user?.displayName || 'colega'}
