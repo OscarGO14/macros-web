@@ -1,0 +1,8 @@
+{
+  "name": "Macros Comida",
+  "short_name": "Macros",
+  "display": "standalone",
+  "background_color": "#181920",
+  "theme_color": "#181920",
+  "start_url": "/"
+}
