@@ -1,5 +1,6 @@
 'use client';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { SearchItemModalProps, SearchableItem, TypedSearchableItem } from './types';
 import { useIngredients } from '@/hooks/useIngredients';
@@ -19,22 +20,10 @@ const SearchItemModal = ({ isVisible, onClose, onSelectItem, itemTypes }: Search
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState<TypedSearchableItem | null>(null);
   const [quantity, setQuantity] = useState('');
-  const dialogRef = useRef<HTMLDialogElement>(null);
 
   const loading = ingredientsLoading || recipesLoading;
   const fetchError =
     (shouldFetchIngredients && ingredientsError) || (shouldFetchRecipes && recipesError);
-
-  useEffect(() => {
-    if (isVisible) {
-      dialogRef.current?.showModal();
-    } else {
-      dialogRef.current?.close();
-      setSearchTerm('');
-      setSelectedItem(null);
-      setQuantity('');
-    }
-  }, [isVisible]);
 
   const allItems: TypedSearchableItem[] = useMemo(() => {
     const combined: TypedSearchableItem[] = [];
@@ -70,83 +59,87 @@ const SearchItemModal = ({ isVisible, onClose, onSelectItem, itemTypes }: Search
     onClose();
   };
 
-  return (
-    <dialog
-      ref={dialogRef}
-      onClose={onClose}
-      onClick={(e) => e.target === dialogRef.current && onClose()}
-      className="backdrop:bg-black/50 bg-transparent w-11/12 max-w-2xl max-h-[90vh] rounded-lg p-0"
-    >
+  if (!isVisible) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end">
       <div
-        className="bg-item-background rounded-lg p-5 flex flex-col gap-3 shadow-lg h-full max-h-[85vh]"
+        className="fixed inset-0 bg-black/50"
+        onClick={onClose}
+      />
+      <div
+        className="relative w-full bg-item-background rounded-t-2xl shadow-lg flex flex-col max-h-[85dvh] pb-[env(safe-area-inset-bottom)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold text-primary text-center">Añadir Item</h2>
+        <div className="p-5 flex flex-col gap-3 flex-1 min-h-0">
+          <h2 className="text-xl font-bold text-primary text-center">Añadir Item</h2>
 
-        <InputText
-          placeholder="Buscar ingrediente o receta..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+          <InputText
+            placeholder="Buscar ingrediente o receta..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
 
-        <div className="flex-1 overflow-y-auto min-h-0">
-          {loading ? (
-            <p className="text-center text-alternate py-4">Cargando...</p>
-          ) : fetchError ? (
-            <p className="text-danger text-center py-4">
-              Error al cargar datos. {(fetchError as Error).message}
-            </p>
-          ) : filteredItems.length === 0 ? (
-            <p className="text-center text-alternate py-4">No se encontraron items</p>
-          ) : (
-            <ul className="flex flex-col gap-1 py-2">
-              {filteredItems.map((item) => (
-                <li key={`${item.itemType}-${item.id}`}>
-                  <button
-                    onClick={() => setSelectedItem(item)}
-                    className={`w-full p-2 rounded border cursor-pointer ${
-                      selectedItem?.id === item.id && selectedItem?.itemType === item.itemType
-                        ? 'border-accent bg-accent/10'
-                        : 'border-transparent'
-                    }`}
-                  >
-                    <Item
-                      name={item.name}
-                      type={item.itemType === 'ingredient' ? ItemType.INGREDIENT : ItemType.RECIPE}
-                      calories={item.itemType === 'ingredient' ? item.calories : item.macros.calories}
-                      showType
-                    />
-                  </button>
-                </li>
-              ))}
-            </ul>
+          <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
+            {loading ? (
+              <p className="text-center text-alternate py-4">Cargando...</p>
+            ) : fetchError ? (
+              <p className="text-danger text-center py-4">
+                Error al cargar datos. {(fetchError as Error).message}
+              </p>
+            ) : filteredItems.length === 0 ? (
+              <p className="text-center text-alternate py-4">No se encontraron items</p>
+            ) : (
+              <ul className="flex flex-col gap-1 py-2">
+                {filteredItems.map((item) => (
+                  <li key={`${item.itemType}-${item.id}`}>
+                    <button
+                      onClick={() => setSelectedItem(item)}
+                      className={`w-full p-2 rounded border cursor-pointer ${
+                        selectedItem?.id === item.id && selectedItem?.itemType === item.itemType
+                          ? 'border-accent bg-accent/10'
+                          : 'border-transparent'
+                      }`}
+                    >
+                      <Item
+                        name={item.name}
+                        type={item.itemType === 'ingredient' ? ItemType.INGREDIENT : ItemType.RECIPE}
+                        calories={item.itemType === 'ingredient' ? item.calories : item.macros.calories}
+                        showType
+                      />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {selectedItem && (
+            <div className="p-3 border border-alternate rounded bg-item-background">
+              <p className="font-semibold mb-2 text-primary">Seleccionado: {selectedItem.name}</p>
+              <input
+                type="number"
+                placeholder={selectedItem.itemType === 'ingredient' ? 'Cantidad (gr)' : 'Cantidad (raciones)'}
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                className="w-full bg-background border border-alternate rounded p-2 text-primary placeholder:text-alternate outline-none"
+              />
+            </div>
           )}
-        </div>
 
-        {selectedItem && (
-          <div className="p-3 border border-alternate rounded bg-item-background">
-            <p className="font-semibold mb-2 text-primary">Seleccionado: {selectedItem.name}</p>
-            <input
-              type="number"
-              placeholder={selectedItem.itemType === 'ingredient' ? 'Cantidad (gr)' : 'Cantidad (raciones)'}
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              className="w-full bg-background border border-alternate rounded p-2 text-primary placeholder:text-alternate outline-none"
+          <div className="flex gap-3 mt-2">
+            <ActionButton label="Cancelar" onPress={onClose} color="secondary" />
+            <ActionButton
+              label="Confirmar"
+              onPress={handleConfirm}
+              disabled={!selectedItem || loading}
+              color="accent"
             />
           </div>
-        )}
-
-        <div className="flex gap-3 mt-2">
-          <ActionButton label="Cancelar" onPress={onClose} color="secondary" />
-          <ActionButton
-            label="Confirmar"
-            onPress={handleConfirm}
-            disabled={!selectedItem || loading}
-            color="accent"
-          />
         </div>
       </div>
-    </dialog>
+    </div>,
+    document.body
   );
 };
 
