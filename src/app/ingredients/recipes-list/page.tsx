@@ -13,7 +13,7 @@ export default function RecipesListPage() {
   return (
     <Screen>
       <div className="flex flex-col gap-4 py-4">
-        <p className="text-lg font-semibold text-primary">Mis recetas</p>
+        <p className="text-lg font-semibold text-primary">Recetas</p>
         {loading && <p className="text-alternate italic">Cargando recetas...</p>}
         {error && <p className="text-alternate italic">Error: {error.message}</p>}
         {data.length > 0 && (
