@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:ingredients": "node scripts/seed-ingredients.mjs",
+    "seed:ingredients:dry": "node scripts/seed-ingredients.mjs --dry-run"
   },
   "dependencies": {
     "firebase": "^12.9.0",
