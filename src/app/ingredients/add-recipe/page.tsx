@@ -1,13 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { addDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { addDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
-import { db, recipesCollection } from '@/services/firebase';
-import { useUserStore } from '@/store/userStore';
+import { recipesCollection } from '@/services/firebase';
 import { Ingredient } from '@/types/ingredient';
 import { Macros } from '@/types/macros';
-import { Collections } from '@/types/collections';
 import { ItemType } from '@/types/itemType';
 import { SearchableItem } from '@/components/SearchItemModal/types';
 import SearchItemModal from '@/components/SearchItemModal';
@@ -27,7 +25,6 @@ const initialMacros: Macros = { calories: 0, proteins: 0, carbs: 0, fats: 0 };
 
 export default function AddRecipePage() {
   const router = useRouter();
-  const { user } = useUserStore();
 
   const [name, setName] = useState('');
   const [selectedIngredientsData, setSelectedIngredientsData] = useState<SelectedIngredientData[]>([]);
@@ -59,13 +56,12 @@ export default function AddRecipePage() {
       total.carbs += (item.ingredient.carbs || 0) * factor;
       total.fats += (item.ingredient.fats || 0) * factor;
     });
-    const perServing: Macros = {
+    return {
       calories: parseFloat((total.calories / numServes).toFixed(2)),
       proteins: parseFloat((total.proteins / numServes).toFixed(2)),
       carbs: parseFloat((total.carbs / numServes).toFixed(2)),
       fats: parseFloat((total.fats / numServes).toFixed(2)),
     };
-    return perServing;
   };
 
   useEffect(() => {
@@ -78,10 +74,6 @@ export default function AddRecipePage() {
   }, [selectedIngredientsData, serves]);
 
   const handleSaveRecipe = async () => {
-    if (!user) {
-      toast.error('Debes iniciar sesión para guardar recetas.');
-      return;
-    }
     if (name.trim() === '') {
       toast.error('El nombre de la receta no puede estar vacío.');
       return;
@@ -90,7 +82,6 @@ export default function AddRecipePage() {
     setLoading(true);
     const numServes = parseInt(serves, 10) || 1;
     const newRecipeData = {
-      userId: user.uid,
       name: name.trim(),
       ingredients: selectedIngredientsData.map((item) => ({
         ingredientId: item.ingredient.id,
@@ -103,10 +94,7 @@ export default function AddRecipePage() {
     };
 
     try {
-      const newRecipeRef = await addDoc(recipesCollection, newRecipeData);
-      await updateDoc(doc(db, Collections.USERS, user.uid), {
-        customRecipeIds: arrayUnion(newRecipeRef.id),
-      });
+      await addDoc(recipesCollection, newRecipeData);
       toast.success('Receta guardada correctamente.');
       router.back();
     } catch (error) {
