@@ -7,7 +7,7 @@ export type RecipeIngredient = {
 
 export interface Recipe {
   id: string;
-  userId: string;
+  userId?: string; // Opcional: las recetas son globales, sin propietario
   name: string;
   ingredients: RecipeIngredient[];
   macros: Macros;
