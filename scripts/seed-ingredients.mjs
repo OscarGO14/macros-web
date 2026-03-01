@@ -1,5 +1,6 @@
 // scripts/seed-ingredients.mjs
-import { db } from './firebase-admin.mjs';
+import { db, authenticate } from './firebase-admin.mjs';
+import { collection, getDocs, doc, writeBatch } from 'firebase/firestore';
 import { fetchAllProducts } from './off-fetcher.mjs';
 import { mapProduct, categoryLabel } from './ingredient-mapper.mjs';
 import { deduplicate } from './deduplicator.mjs';
@@ -7,14 +8,14 @@ import { deduplicate } from './deduplicator.mjs';
 const INGREDIENTS_COLLECTION = 'ingredients';
 
 async function getExistingIngredients() {
-  const snapshot = await db.collection(INGREDIENTS_COLLECTION).get();
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const snapshot = await getDocs(collection(db, INGREDIENTS_COLLECTION));
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
 async function uploadIngredients(ingredients) {
-  const batch = db.batch();
+  const batch = writeBatch(db);
   for (const ingredient of ingredients) {
-    const ref = db.collection(INGREDIENTS_COLLECTION).doc();
+    const ref = doc(collection(db, INGREDIENTS_COLLECTION));
     batch.set(ref, ingredient);
   }
   await batch.commit();
@@ -22,6 +23,11 @@ async function uploadIngredients(ingredients) {
 
 async function main() {
   console.log('=== Seed Ingredients ===\n');
+
+  // 0. Authenticate
+  console.log('0. Authenticating...');
+  await authenticate();
+  console.log('   OK\n');
 
   // 1. Fetch from OFF
   console.log('1. Fetching from Open Food Facts...');
@@ -32,7 +38,6 @@ async function main() {
   console.log('2. Mapping and filtering...');
   const candidates = [];
   for (const product of rawProducts) {
-    // Determine which category this product belongs to
     const tags = product.categories_tags ?? [];
     const matchedTag = [
       'en:meats', 'en:fish-and-seafood', 'en:vegetables', 'en:fruits',
@@ -68,7 +73,6 @@ async function main() {
   }
 
   console.log(`5. Uploading ${toAdd.length} ingredients to Firestore...`);
-  // Firestore batch limit is 500 — split if needed
   const BATCH_SIZE = 400;
   for (let i = 0; i < toAdd.length; i += BATCH_SIZE) {
     const chunk = toAdd.slice(i, i + BATCH_SIZE);

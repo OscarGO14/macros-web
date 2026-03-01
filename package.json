@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:ingredients": "node scripts/seed-ingredients.mjs",
-    "seed:ingredients:dry": "node scripts/seed-ingredients.mjs --dry-run"
+    "seed:ingredients": "node --env-file=.env.local scripts/seed-ingredients.mjs",
+    "seed:ingredients:dry": "node --env-file=.env.local scripts/seed-ingredients.mjs --dry-run"
   },
   "dependencies": {
     "firebase": "^12.9.0",
@@ -27,7 +27,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "firebase-admin": "^13.7.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
