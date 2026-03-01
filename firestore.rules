@@ -16,14 +16,9 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
-    // Recetas: cualquier usuario autenticado puede leer todas;
-    // solo el creador puede crear/actualizar/eliminar las suyas
+    // Recetas: cualquier usuario autenticado puede leer y escribir
     match /recipes/{recipeId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated()
-                    && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated()
-                            && resource.data.userId == request.auth.uid;
+      allow read, write: if isAuthenticated();
     }
   }
 }
