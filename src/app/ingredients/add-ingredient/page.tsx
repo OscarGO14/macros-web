@@ -4,6 +4,7 @@ import { collection, addDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { db } from '@/services/firebase';
 import { useUserStore } from '@/store/userStore';
+import { useIngredientStore } from '@/store/ingredientStore';
 import { Collections } from '@/types/collections';
 import InputText from '@/components/ui/InputText';
 import Screen from '@/components/ui/Screen';
@@ -11,6 +12,7 @@ import SubmitButton from '@/components/ui/SubmitButton';
 
 export default function AddIngredientPage() {
   const { user } = useUserStore();
+  const addIngredientToStore = useIngredientStore(s => s.addIngredient);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [calories, setCalories] = useState('');
@@ -37,7 +39,8 @@ export default function AddIngredientPage() {
         carbs: parseFloat(carbs),
         fats: parseFloat(fats),
       };
-      await addDoc(collection(db, Collections.INGREDIENTS), ingredientData);
+      const docRef = await addDoc(collection(db, Collections.INGREDIENTS), ingredientData);
+      addIngredientToStore({ id: docRef.id, ...ingredientData });
       toast.success('Ingrediente añadido correctamente.');
       setName('');
       setCategory('');
