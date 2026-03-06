@@ -3,6 +3,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useUserStore } from '@/store/userStore';
+import { useMealDraftStore } from '@/store/mealDraftStore';
 import { getToday } from '@/utils/getToday';
 import { purgeOldHistory } from '@/utils/purgeOldHistory';
 import { dailyLogCalculator } from '@/utils/dailyLogCalculator';
@@ -21,12 +22,12 @@ import { StatsCard } from '@/components/ui/StatsCard';
 
 export default function AddMealPage() {
   const { user, updateUserData } = useUserStore();
+  const { draftItems, addItem, removeItem, clearDraft } = useMealDraftStore();
   const router = useRouter();
-  const [currentMealItems, setCurrentMealItems] = useState<ConsumedItem[]>([]);
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
 
   const totalMealMacros = useMemo(() => {
-    return currentMealItems.reduce(
+    return draftItems.reduce(
       (acc, item) => ({
         calories: acc.calories + item.macros.calories,
         proteins: acc.proteins + item.macros.proteins,
@@ -35,7 +36,7 @@ export default function AddMealPage() {
       }),
       { calories: 0, proteins: 0, carbs: 0, fats: 0 },
     );
-  }, [currentMealItems]);
+  }, [draftItems]);
 
   const handleSelectItem = useCallback((item: SearchableItem, quantity: number) => {
     let newItem: ConsumedItem;
@@ -73,19 +74,19 @@ export default function AddMealPage() {
         },
       } as MealRecipe;
     }
-    setCurrentMealItems((prev) => [...prev, newItem]);
+    addItem(newItem);
     setIsSearchModalVisible(false);
-  }, []);
+  }, [addItem]);
 
   const handleSaveMeal = useCallback(async () => {
-    if (currentMealItems.length === 0) {
+    if (draftItems.length === 0) {
       toast.error('No has añadido ningún alimento a la comida.');
       return;
     }
     if (!user) return;
 
     const today = getToday();
-    const dailyLog = dailyLogCalculator(user.history?.[today], currentMealItems, totalMealMacros);
+    const dailyLog = dailyLogCalculator(user.history?.[today], draftItems, totalMealMacros);
     const cleanHistory = purgeOldHistory({ ...user.history, [today]: dailyLog });
     const updatedUserData = { ...user, history: cleanHistory };
     const previousUserData = user;
@@ -99,13 +100,13 @@ export default function AddMealPage() {
       return;
     }
 
-    setCurrentMealItems([]);
+    clearDraft();
     router.replace('/dashboard');
-  }, [currentMealItems, totalMealMacros, user, router, updateUserData]);
+  }, [draftItems, totalMealMacros, user, router, updateUserData, clearDraft]);
 
   const handleDeleteItem = useCallback((index: number) => {
-    setCurrentMealItems((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    removeItem(index);
+  }, [removeItem]);
 
   return (
     <Screen>
@@ -113,11 +114,11 @@ export default function AddMealPage() {
         <p className="text-xl font-semibold text-primary">Elementos añadidos:</p>
 
         <div className="flex flex-col gap-2 min-h-24">
-          {currentMealItems.length === 0 ? (
+          {draftItems.length === 0 ? (
             <p className="text-center text-alternate">No has añadido ningún alimento.</p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {currentMealItems.map((item, index) => (
+              {draftItems.map((item, index) => (
                 <li key={`${item.id}-${index}`}>
                   <Item
                     name={item.name}
