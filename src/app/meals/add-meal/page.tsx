@@ -16,6 +16,7 @@ import SearchItemModal from '@/components/SearchItemModal';
 import SubmitButton from '@/components/ui/SubmitButton';
 import ActionButton from '@/components/ui/ActionButton';
 import Screen from '@/components/ui/Screen';
+import { StatsCard } from '@/components/ui/StatsCard';
 
 export default function AddMealPage() {
   const { user, updateUserData } = useUserStore();
@@ -107,12 +108,7 @@ export default function AddMealPage() {
   return (
     <Screen>
       <div className="flex flex-col gap-3">
-        <ActionButton
-          label="Añadir ingrediente o receta"
-          onPress={() => setIsSearchModalVisible(true)}
-        />
-
-        <p className="text-xl font-semibold text-primary my-4">Elementos añadidos:</p>
+        <p className="text-xl font-semibold text-primary">Elementos añadidos:</p>
 
         <div className="flex flex-col gap-2 min-h-24">
           {currentMealItems.length === 0 ? (
@@ -133,6 +129,22 @@ export default function AddMealPage() {
             </ul>
           )}
         </div>
+
+        <ActionButton
+          label="Añadir ingrediente o receta"
+          onPress={() => setIsSearchModalVisible(true)}
+        />
+
+        <StatsCard
+          title="Total comida"
+          value={totalMealMacros.calories.toFixed(0)}
+          variant="primary"
+          trend={[
+            `P: ${totalMealMacros.proteins.toFixed(1)}`,
+            `C: ${totalMealMacros.carbs.toFixed(1)}`,
+            `G: ${totalMealMacros.fats.toFixed(1)}`,
+          ]}
+        />
 
         <SubmitButton onPress={handleSaveMeal} label="Guardar Comida" />
 
