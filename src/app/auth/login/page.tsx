@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { toast } from 'sonner';
@@ -66,9 +65,6 @@ export default function LoginPage() {
             )}
           </div>
 
-          <Link href="/auth/register" replace className="mt-6 text-alternate hover:text-primary">
-            ¿No tienes cuenta? Regístrate
-          </Link>
         </div>
       </div>
     </Screen>
