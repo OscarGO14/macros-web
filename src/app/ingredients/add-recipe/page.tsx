@@ -152,13 +152,18 @@ export default function AddRecipePage() {
           />
         </div>
 
-        <InputText
-          label="Raciones por receta"
-          placeholder="Ej: 2 (para cuántas comidas rinde)"
-          type="number"
-          value={serves}
-          onChange={(e) => setServes(e.target.value)}
-        />
+        <div className="flex flex-col gap-1">
+          <InputText
+            label="Raciones por receta"
+            placeholder="Ej: 2"
+            type="number"
+            value={serves}
+            onChange={(e) => setServes(e.target.value)}
+          />
+          <p className="text-alternate text-sm px-1">
+            Número de platos que rinde esta receta. Los macros se dividen entre este número.
+          </p>
+        </div>
 
         <StatsCard
           title="Macros por ración"
