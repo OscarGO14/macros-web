@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation';
 import SettingsItem from '@/components/ui/SettingsItem';
 import { SettingsControlType } from '@/components/ui/SettingsItem/types';
 import Screen from '@/components/ui/Screen';
-import { Advice } from '@/components/ui/Advice';
 
 export default function IngredientsPage() {
   const router = useRouter();
@@ -12,8 +11,7 @@ export default function IngredientsPage() {
     <Screen>
       <div className="flex flex-col justify-evenly flex-1">
         <div className="flex flex-col items-center justify-center gap-4">
-          <Advice information="Los ingredientes y recetas no son editables por ahora." />
-          <h1 className="text-primary text-2xl font-bold">Gestor de Ingredientes</h1>
+<h1 className="text-primary text-2xl font-bold">Gestor de Ingredientes</h1>
 
           <SettingsItem
             label="Ver ingredientes"
