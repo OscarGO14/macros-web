@@ -41,6 +41,10 @@ const SearchItemModal = ({ isVisible, onClose, onSelectItem, itemTypes }: Search
     return allItems.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [allItems, searchTerm]);
 
+  const hasIngredients = filteredItems.some(i => i.itemType === 'ingredient');
+  const hasRecipes = filteredItems.some(i => i.itemType === 'recipe');
+  const showSectionHeaders = hasIngredients && hasRecipes;
+
   const handleConfirm = () => {
     if (!selectedItem) {
       toast.error('Por favor, selecciona un item.');
@@ -91,35 +95,58 @@ const SearchItemModal = ({ isVisible, onClose, onSelectItem, itemTypes }: Search
               <p className="text-center text-alternate py-4">No se encontraron items</p>
             ) : (
               <ul className="flex flex-col gap-1 py-2">
-                {filteredItems.map((item) => (
-                  <li key={`${item.itemType}-${item.id}`}>
-                    <button
-                      onClick={() => setSelectedItem(item)}
-                      className={`w-full p-2 rounded border cursor-pointer ${
-                        selectedItem?.id === item.id && selectedItem?.itemType === item.itemType
-                          ? 'border-accent bg-accent/10'
-                          : 'border-transparent'
-                      }`}
-                    >
-                      <Item
-                        name={item.name}
-                        type={item.itemType === 'ingredient' ? ItemType.INGREDIENT : ItemType.RECIPE}
-                        calories={item.itemType === 'ingredient' ? item.calories : item.macros.calories}
-                        showType
-                      />
-                    </button>
-                  </li>
-                ))}
+                {filteredItems.map((item, index) => {
+                  const prevItem = filteredItems[index - 1];
+                  const isFirstIngredient = showSectionHeaders && item.itemType === 'ingredient' && (index === 0 || prevItem?.itemType !== 'ingredient');
+                  const isFirstRecipe = showSectionHeaders && item.itemType === 'recipe' && prevItem?.itemType !== 'recipe';
+
+                  return (
+                    <React.Fragment key={`${item.itemType}-${item.id}`}>
+                      {isFirstIngredient && (
+                        <li className="px-2 pt-2 pb-1">
+                          <p className="text-alternate text-xs font-semibold uppercase tracking-wide">Ingredientes</p>
+                        </li>
+                      )}
+                      {isFirstRecipe && (
+                        <li className="px-2 pt-2 pb-1">
+                          <p className="text-alternate text-xs font-semibold uppercase tracking-wide">Recetas</p>
+                        </li>
+                      )}
+                      <li>
+                        <button
+                          onClick={() => setSelectedItem(item)}
+                          className={`w-full p-2 rounded border cursor-pointer ${
+                            selectedItem?.id === item.id && selectedItem?.itemType === item.itemType
+                              ? 'border-accent bg-accent/10'
+                              : 'border-transparent'
+                          }`}
+                        >
+                          <Item
+                            name={item.name}
+                            type={item.itemType === 'ingredient' ? ItemType.INGREDIENT : ItemType.RECIPE}
+                            calories={item.itemType === 'ingredient' ? item.calories : item.macros.calories}
+                            showType
+                          />
+                        </button>
+                      </li>
+                    </React.Fragment>
+                  );
+                })}
               </ul>
             )}
           </div>
 
           {selectedItem && (
             <div className="p-3 border border-alternate rounded bg-item-background">
-              <p className="font-semibold mb-2 text-primary">Seleccionado: {selectedItem.name}</p>
+              <p className="font-semibold mb-2 text-primary">
+                {selectedItem.name} —{' '}
+                <span className="text-alternate font-normal">
+                  cantidad en {selectedItem.itemType === 'ingredient' ? 'gramos' : 'raciones'}
+                </span>
+              </p>
               <input
                 type="number"
-                placeholder={selectedItem.itemType === 'ingredient' ? 'Cantidad (gr)' : 'Cantidad (raciones)'}
+                placeholder={selectedItem.itemType === 'ingredient' ? 'Ej: 150' : 'Ej: 1'}
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 className="w-full bg-background border border-alternate rounded p-2 text-primary placeholder:text-alternate outline-none"
