@@ -1,48 +1,38 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/services/firebase';
 import { useUserStore } from '@/store/userStore';
-import { getDayOfWeek } from '@/utils/getDayOfWeek';
-import { createEmptyDailyLog } from '@/utils/createEmpytDailyLog';
-import { isFromToday } from '@/utils/dateUtils';
+import { getToday } from '@/utils/getToday';
+import { getCurrentWeekDates } from '@/utils/getCurrentWeekDates';
+import { getMonthStats, getPrevMonthPrefix } from '@/utils/getMonthStats';
 import DoughnutChart from '@/components/DoughnutChart';
 import BarChartComponent from '@/components/BarChart';
 import Screen from '@/components/ui/Screen';
 import SettingsItem from '@/components/ui/SettingsItem';
 import { SettingsControlType } from '@/components/ui/SettingsItem/types';
+import { StatsCard } from '@/components/ui/StatsCard';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [objective, setObjective] = useState<number | undefined>(undefined);
-  const [consumed, setConsumed] = useState<number | undefined>(undefined);
-  const { user, updateUserData } = useUserStore();
-  const today = useMemo(() => getDayOfWeek(), []);
+  const { user } = useUserStore();
 
-  useEffect(() => {
-    const checkAndUpdateDailyLog = async () => {
-      if (!user) return;
+  const today = useMemo(() => getToday(), []);
+  const weekDates = useMemo(() => getCurrentWeekDates(), []);
 
-      const today = getDayOfWeek();
-      const todayHistory = user.history?.[today];
+  const objective = user?.dailyGoals?.calories;
+  const consumed = user?.history?.[today]?.totalMacros?.calories ?? 0;
 
-      if (!todayHistory || !isFromToday(todayHistory.date)) {
-        const newDailyLog = createEmptyDailyLog();
-        const userRef = doc(db, 'users', user.uid);
-        await updateDoc(userRef, { [`history.${today}`]: newDailyLog });
+  const currentMonthPrefix = useMemo(() => today.slice(0, 7), [today]);
+  const prevMonthPrefix = useMemo(() => getPrevMonthPrefix(currentMonthPrefix), [currentMonthPrefix]);
 
-        updateUserData({ ...user, history: { ...user.history, [today]: newDailyLog } });
-        setObjective(user.dailyGoals?.calories);
-        setConsumed(0);
-      } else {
-        setObjective(user.dailyGoals?.calories);
-        setConsumed(todayHistory.totalMacros?.calories);
-      }
-    };
-
-    checkAndUpdateDailyLog();
-  }, [user]);
+  const currentMonthStats = useMemo(
+    () => getMonthStats(user?.history ?? {}, currentMonthPrefix),
+    [user?.history, currentMonthPrefix],
+  );
+  const prevMonthStats = useMemo(
+    () => getMonthStats(user?.history ?? {}, prevMonthPrefix),
+    [user?.history, prevMonthPrefix],
+  );
 
   return (
     <Screen>
@@ -54,15 +44,45 @@ export default function DashboardPage() {
         </div>
 
         {objective !== undefined && (
-          <DoughnutChart data={{ objective, consumed: consumed || 0 }} />
+          <DoughnutChart data={{ objective, consumed }} />
         )}
 
         {user && (
           <BarChartComponent
             history={user.history}
             today={today}
+            weekDates={weekDates}
             dailyGoal={user.dailyGoals?.calories}
           />
+        )}
+
+        {currentMonthStats.daysLogged > 0 && (
+          <div className="flex gap-3 w-full">
+            <div className="flex-1">
+              <StatsCard
+                title={`Media ${currentMonthPrefix.slice(5)}`}
+                value={currentMonthStats.avgCalories}
+                variant="primary"
+                trend={[
+                  `Días: ${currentMonthStats.daysLogged}`,
+                  `P: ${currentMonthStats.avgProteins}`,
+                ]}
+              />
+            </div>
+            {prevMonthStats.daysLogged > 0 && (
+              <div className="flex-1">
+                <StatsCard
+                  title={`Media ${prevMonthPrefix.slice(5)}`}
+                  value={prevMonthStats.avgCalories}
+                  variant="secondary"
+                  trend={[
+                    `Días: ${prevMonthStats.daysLogged}`,
+                    `P: ${prevMonthStats.avgProteins}`,
+                  ]}
+                />
+              </div>
+            )}
+          </div>
         )}
 
         <SettingsItem
