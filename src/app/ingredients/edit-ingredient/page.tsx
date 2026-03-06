@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { doc, updateDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { db } from '@/services/firebase';
@@ -23,9 +23,10 @@ const CATEGORIES = [
   'otra',
 ];
 
-export default function EditIngredientPage() {
+function EditIngredientForm() {
   const router = useRouter();
-  const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id') ?? '';
   const { data, loading } = useIngredients();
   const updateIngredient = useIngredientStore(s => s.updateIngredient);
 
@@ -39,6 +40,11 @@ export default function EditIngredientPage() {
 
   useEffect(() => {
     if (loading) return;
+    if (!id) {
+      toast.error('Ingrediente no encontrado.');
+      router.back();
+      return;
+    }
     const ingredient = data?.find(i => i.id === id);
     if (!ingredient) {
       toast.error('Ingrediente no encontrado.');
@@ -143,5 +149,13 @@ export default function EditIngredientPage() {
         </div>
       </div>
     </Screen>
+  );
+}
+
+export default function EditIngredientPage() {
+  return (
+    <Suspense fallback={<Screen><p className="text-center text-alternate py-8">Cargando...</p></Screen>}>
+      <EditIngredientForm />
+    </Suspense>
   );
 }

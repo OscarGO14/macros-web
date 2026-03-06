@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { db } from '@/services/firebase';
@@ -44,9 +44,10 @@ const calculateRecipeMacros = (
   };
 };
 
-export default function EditRecipePage() {
+function EditRecipeForm() {
   const router = useRouter();
-  const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id') ?? '';
 
   const [name, setName] = useState('');
   const [serves, setServes] = useState('1');
@@ -57,6 +58,11 @@ export default function EditRecipePage() {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
+    if (!id) {
+      toast.error('Receta no encontrada.');
+      router.back();
+      return;
+    }
     const fetchRecipe = async () => {
       try {
         const snapshot = await getDoc(doc(db, Collections.RECIPES, id));
@@ -214,5 +220,13 @@ export default function EditRecipePage() {
         />
       </div>
     </Screen>
+  );
+}
+
+export default function EditRecipePage() {
+  return (
+    <Suspense fallback={<Screen><p className="text-center text-alternate py-8">Cargando...</p></Screen>}>
+      <EditRecipeForm />
+    </Suspense>
   );
 }

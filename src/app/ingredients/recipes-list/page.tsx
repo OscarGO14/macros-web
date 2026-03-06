@@ -44,7 +44,7 @@ export default function RecipesListPage() {
                   name={item.name}
                   type={ItemType.RECIPE}
                   calories={item.macros.calories}
-                  onEdit={() => router.push(`/ingredients/edit-recipe/${item.id}`)}
+                  onEdit={() => router.push(`/ingredients/edit-recipe?id=${item.id}`)}
                   onDelete={() => setRecipeToDelete(item)}
                 />
               </li>
