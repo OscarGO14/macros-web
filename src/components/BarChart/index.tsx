@@ -11,19 +11,8 @@ import {
   Cell,
 } from 'recharts';
 import { MyColors } from '@/types/colors';
-import { DayOfWeek, dayOfWeekArray, History } from '@/types/history';
-import { createEmptyDailyLog } from '@/utils/createEmpytDailyLog';
-import { formatDay } from '@/utils/translator';
-
-const fallbackHistory: History = {
-  monday: createEmptyDailyLog(),
-  tuesday: createEmptyDailyLog(),
-  wednesday: createEmptyDailyLog(),
-  thursday: createEmptyDailyLog(),
-  friday: createEmptyDailyLog(),
-  saturday: createEmptyDailyLog(),
-  sunday: createEmptyDailyLog(),
-};
+import { History } from '@/types/history';
+import { getDayLabel } from '@/utils/getCurrentWeekDates';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload }: any) => {
@@ -44,27 +33,21 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 const BarChartComponent = ({
-  history = fallbackHistory,
+  history = {},
   today,
+  weekDates,
   dailyGoal = 1700,
 }: {
   history?: History;
-  today: DayOfWeek;
+  today: string;
+  weekDates: string[];
   dailyGoal?: number;
 }) => {
-  const daysArray = useMemo(() => {
-    const todayIndex = dayOfWeekArray.indexOf(today);
-    return [
-      ...dayOfWeekArray.slice(todayIndex + 1),
-      ...dayOfWeekArray.slice(0, todayIndex + 1),
-    ];
-  }, [today]);
-
   const barData = useMemo(
     () =>
-      daysArray.map((day) => {
-        const dayCalories = history?.[day]?.totalMacros?.calories ?? 0;
-        const isToday = day === today;
+      weekDates.map((date) => {
+        const dayCalories = history?.[date]?.totalMacros?.calories ?? 0;
+        const isToday = date === today;
 
         let color: string = MyColors.ALTERNATE;
         if (dayCalories > 0) {
@@ -78,18 +61,18 @@ const BarChartComponent = ({
         }
 
         return {
-          name: formatDay(day),
+          name: getDayLabel(date),
           value: dayCalories,
           color,
           labelColor: isToday ? MyColors.ACCENT : MyColors.ALTERNATE,
         };
       }),
-    [history, dailyGoal, daysArray, today],
+    [history, dailyGoal, weekDates, today],
   );
 
   return (
     <div className="flex flex-col items-center w-full rounded-lg gap-2">
-      <p className="text-lg font-semibold text-alternate">Tus últimos 7 Días</p>
+      <p className="text-lg font-semibold text-alternate">Semana actual</p>
 
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
