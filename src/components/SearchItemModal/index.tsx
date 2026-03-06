@@ -60,6 +60,12 @@ const SearchItemModal = ({ isVisible, onClose, onSelectItem, itemTypes }: Search
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { itemType: _itemType, ...baseItem } = selectedItem;
     onSelectItem(baseItem as SearchableItem, numQuantity);
+
+    // Limpiar campos para la próxima vez
+    setSearchTerm('');
+    setSelectedItem(null);
+    setQuantity('');
+
     onClose();
   };
 
