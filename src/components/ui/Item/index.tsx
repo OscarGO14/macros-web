@@ -1,32 +1,22 @@
 import React, { useMemo } from 'react';
 import {
   MdFoodBank,
-  MdBreakfastDining,
-  MdFastfood,
-  MdTakeoutDining,
   MdRamenDining,
-  MdBrunchDining,
-  MdOutdoorGrill,
   MdEdit,
   MdDelete,
   MdHelpOutline,
 } from 'react-icons/md';
-import { FaFish } from 'react-icons/fa';
 import type { IconType } from 'react-icons';
 import { ItemProps, ItemType } from './types';
-import { getRandomElement } from '@/utils/getRandomElement';
 import { MyColors } from '@/types/colors';
-
-const INGREDIENT_ICONS: IconType[] = [MdFoodBank, MdBreakfastDining, MdFastfood, FaFish];
-const RECIPE_ICONS: IconType[] = [MdTakeoutDining, MdRamenDining, MdBrunchDining, MdOutdoorGrill];
 
 const Item: React.FC<ItemProps> = ({ name, type, calories, onDelete, showType = true, onEdit }) => {
   const IconComponent = useMemo((): IconType => {
     switch (type) {
       case ItemType.INGREDIENT:
-        return getRandomElement(INGREDIENT_ICONS) ?? MdFoodBank;
+        return MdFoodBank;
       case ItemType.RECIPE:
-        return getRandomElement(RECIPE_ICONS) ?? MdTakeoutDining;
+        return MdRamenDining;
       default:
         return MdHelpOutline;
     }
