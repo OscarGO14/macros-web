@@ -10,6 +10,8 @@ interface IngredientState {
   error: Error | null;
   loadIngredients: () => Promise<void>;
   addIngredient: (ingredient: Ingredient) => void;
+  updateIngredient: (id: string, data: Omit<Ingredient, 'id'>) => void;
+  removeIngredient: (id: string) => void;
 }
 
 export const useIngredientStore = create<IngredientState>((set, get) => ({
@@ -40,5 +42,19 @@ export const useIngredientStore = create<IngredientState>((set, get) => ({
 
   addIngredient: (ingredient: Ingredient) => {
     set(state => ({ ingredients: [...state.ingredients, ingredient] }));
+  },
+
+  updateIngredient: (id: string, data: Omit<Ingredient, 'id'>) => {
+    set(state => ({
+      ingredients: state.ingredients.map(ing =>
+        ing.id === id ? { ...ing, ...data } : ing,
+      ),
+    }));
+  },
+
+  removeIngredient: (id: string) => {
+    set(state => ({
+      ingredients: state.ingredients.filter(ing => ing.id !== id),
+    }));
   },
 }));
