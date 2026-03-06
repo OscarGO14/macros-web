@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { collection, addDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { db } from '@/services/firebase';
@@ -10,7 +11,20 @@ import InputText from '@/components/ui/InputText';
 import Screen from '@/components/ui/Screen';
 import SubmitButton from '@/components/ui/SubmitButton';
 
+const CATEGORIES = [
+  'carnes',
+  'pescado',
+  'verduras',
+  'frutas',
+  'cereales',
+  'lácteos',
+  'legumbres',
+  'huevos',
+  'otra',
+];
+
 export default function AddIngredientPage() {
+  const router = useRouter();
   const { user } = useUserStore();
   const addIngredientToStore = useIngredientStore(s => s.addIngredient);
   const [name, setName] = useState('');
@@ -42,12 +56,7 @@ export default function AddIngredientPage() {
       const docRef = await addDoc(collection(db, Collections.INGREDIENTS), ingredientData);
       addIngredientToStore({ id: docRef.id, ...ingredientData });
       toast.success('Ingrediente añadido correctamente.');
-      setName('');
-      setCategory('');
-      setCalories('');
-      setProteins('');
-      setCarbs('');
-      setFats('');
+      router.back();
     } catch (error) {
       toast.error(`Error al guardar el ingrediente: ${error}`);
     }
@@ -62,12 +71,19 @@ export default function AddIngredientPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <InputText
-          label="Categoría (Opcional)"
-          placeholder="Ej: Carnes, Lácteos, Verduras..."
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        />
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-alternate">Categoría</label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="bg-item-background border border-alternate/20 rounded-lg p-3 text-primary w-full outline-none"
+          >
+            <option value="">Selecciona una categoría</option>
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+            ))}
+          </select>
+        </div>
         <InputText
           label="Calorías (kcal) *"
           placeholder="Ej: 120"
