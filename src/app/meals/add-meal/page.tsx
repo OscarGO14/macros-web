@@ -3,7 +3,8 @@ import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useUserStore } from '@/store/userStore';
-import { getDayOfWeek } from '@/utils/getDayOfWeek';
+import { getToday } from '@/utils/getToday';
+import { purgeOldHistory } from '@/utils/purgeOldHistory';
 import { dailyLogCalculator } from '@/utils/dailyLogCalculator';
 import { Ingredient } from '@/types/ingredient';
 import { Recipe } from '@/types/recipe';
@@ -83,14 +84,15 @@ export default function AddMealPage() {
     }
     if (!user) return;
 
-    const today = getDayOfWeek();
+    const today = getToday();
     const dailyLog = dailyLogCalculator(user.history?.[today], currentMealItems, totalMealMacros);
-    const updatedUserData = { ...user, history: { ...user.history, [today]: dailyLog } };
+    const cleanHistory = purgeOldHistory({ ...user.history, [today]: dailyLog });
+    const updatedUserData = { ...user, history: cleanHistory };
     const previousUserData = user;
     updateUserData(updatedUserData);
 
     try {
-      await updateUser(user.uid, { history: { ...user.history, [today]: dailyLog } });
+      await updateUser(user.uid, { history: cleanHistory });
     } catch {
       updateUserData(previousUserData);
       toast.error('No se pudo guardar la comida. Inténtalo de nuevo.');

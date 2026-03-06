@@ -1,6 +1,6 @@
 import { db } from '@/services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { getDayOfWeek } from '@/utils/getDayOfWeek';
+import { getToday } from '@/utils/getToday';
 import { useUserStore } from '@/store/userStore';
 import { useEffect, useState } from 'react';
 import { DailyLog } from '@/types/history';
@@ -17,7 +17,7 @@ export const useHistoryData = () => {
         if (doc.exists()) {
           const userData = doc.data();
           const history = userData.history;
-          const today = getDayOfWeek();
+          const today = getToday();
           const todayHistory = history[today];
           if (todayHistory) {
             setHistory(todayHistory);

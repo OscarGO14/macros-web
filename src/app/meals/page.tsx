@@ -7,7 +7,7 @@ import { StatsCard } from '@/components/ui/StatsCard';
 import ActionButton from '@/components/ui/ActionButton';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { useUserStore } from '@/store/userStore';
-import { getDayOfWeek } from '@/utils/getDayOfWeek';
+import { getToday } from '@/utils/getToday';
 import { updateUser } from '@/services/firebase';
 import { createEmptyDailyLog } from '@/utils/createEmpytDailyLog';
 
@@ -16,7 +16,7 @@ export default function MealsPage() {
   const router = useRouter();
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
-  const today = useMemo(() => getDayOfWeek(), []);
+  const today = useMemo(() => getToday(), []);
 
   const deleteMealsForToday = async () => {
     if (!user) {
