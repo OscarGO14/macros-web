@@ -3,8 +3,6 @@ import { db } from './firebase';
 import { Collections } from '@/types/collections';
 import { IUserStateData } from '@/types/user';
 import { useUserStore } from '@/store/userStore';
-import { UserService } from './userService';
-import { RetryService, OperationQueue } from './retryService';
 
 /**
  * Service for managing data synchronization between Firebase and local state
@@ -18,8 +16,12 @@ export class SyncService {
    * Start real-time synchronization for a user
    */
   static startUserSync(uid: string): void {
-    // Stop existing listener if any
-    this.stopUserSync(uid);
+    // Detener listener existente si hay uno
+    const existing = this.listeners.get(uid);
+    if (existing) {
+      existing();
+      this.listeners.delete(uid);
+    }
 
     console.log(`Starting real-time sync for user: ${uid}`);
 
@@ -49,18 +51,6 @@ export class SyncService {
     );
 
     this.listeners.set(uid, unsubscribe);
-  }
-
-  /**
-   * Stop real-time synchronization for a user
-   */
-  static stopUserSync(uid: string): void {
-    const unsubscribe = this.listeners.get(uid);
-    if (unsubscribe) {
-      unsubscribe();
-      this.listeners.delete(uid);
-      console.log(`Stopped sync for user: ${uid}`);
-    }
   }
 
   /**
@@ -124,140 +114,6 @@ export class SyncService {
     }
 
     return false;
-  }
-
-  /**
-   * Sync local changes to Firebase with conflict resolution
-   */
-  static async syncUserToFirebase(
-    uid: string,
-    localData: IUserStateData,
-    options: { force?: boolean; retryOnConflict?: boolean } = {}
-  ): Promise<boolean> {
-    try {
-      const syncInfo = this.syncState.get(uid);
-
-      if (!options.force && syncInfo) {
-        // Verificar si hay cambios remotos más recientes
-        const remoteData = await UserService.getUser(uid);
-        if (remoteData && this.hasDataChanges(localData, remoteData)) {
-          console.log('Conflict detected: remote data is newer');
-
-          if (options.retryOnConflict) {
-            // Intentar merge automático
-            const mergedData = this.mergeUserData(localData, remoteData);
-            await UserService.updateUser(uid, mergedData);
-            useUserStore.getState().setUser(mergedData);
-            return true;
-          } else {
-            // Reportar conflicto
-            console.warn('Sync conflict - manual resolution required');
-            return false;
-          }
-        }
-      }
-
-      // Actualizar Firebase
-      await UserService.updateUser(uid, localData);
-
-      // Actualizar estado de sincronización
-      this.syncState.set(uid, {
-        lastSync: Date.now(),
-        version: (syncInfo?.version || 0) + 1
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Error syncing to Firebase:', error);
-
-      // Añadir a cola para reintentar más tarde
-      OperationQueue.enqueue(
-        `sync-user-${uid}`,
-        () => this.syncUserToFirebase(uid, localData, options)
-      );
-
-      throw error;
-    }
-  }
-
-  /**
-   * Merge local and remote data (simple strategy)
-   */
-  private static mergeUserData(local: IUserStateData, remote: IUserStateData): IUserStateData {
-    // Estrategia simple: usar remote para campos básicos, merge para history
-    const merged: IUserStateData = {
-      ...remote, // Base remota
-      history: this.mergeHistory(local.history || {}, remote.history || {})
-    };
-
-    return merged;
-  }
-
-  /**
-   * Merge history data from local and remote
-   */
-  private static mergeHistory(
-    local: Record<string, any>,
-    remote: Record<string, any>
-  ): Record<string, any> {
-    const merged = { ...remote };
-
-    // Para cada día en local, comparar con remote
-    Object.keys(local).forEach(day => {
-      const localDay = local[day];
-      const remoteDay = remote[day];
-
-      if (!remoteDay) {
-        // Día solo existe en local
-        merged[day] = localDay;
-      } else {
-        // Día existe en ambos - usar el que tenga más comidas
-        const localMealsCount = localDay?.meals?.length || 0;
-        const remoteMealsCount = remoteDay?.meals?.length || 0;
-
-        merged[day] = localMealsCount > remoteMealsCount ? localDay : remoteDay;
-      }
-    });
-
-    return merged;
-  }
-
-  /**
-   * Force sync from Firebase to local state
-   */
-  static async forceSyncFromFirebase(uid: string): Promise<void> {
-    try {
-      const remoteData = await UserService.getUser(uid);
-      if (remoteData) {
-        useUserStore.getState().setUser(remoteData);
-        this.syncState.set(uid, {
-          lastSync: Date.now(),
-          version: 0
-        });
-        console.log('Forced sync from Firebase completed');
-      }
-    } catch (error) {
-      console.error('Error forcing sync from Firebase:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get synchronization status
-   */
-  static getSyncStatus(uid: string): {
-    isActive: boolean;
-    lastSync: number | null;
-    version: number;
-  } {
-    const hasListener = this.listeners.has(uid);
-    const syncInfo = this.syncState.get(uid);
-
-    return {
-      isActive: hasListener,
-      lastSync: syncInfo?.lastSync || null,
-      version: syncInfo?.version || 0
-    };
   }
 
   /**

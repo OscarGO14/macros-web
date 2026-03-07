@@ -1,15 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import {
-  getFirestore,
-  collection,
-  where,
-  query,
-  getDocs,
-  doc,
-  deleteDoc,
-  updateDoc,
-  getDoc,
-} from 'firebase/firestore';
+import { getFirestore, collection } from 'firebase/firestore';
 import { getAuth, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { Collections } from '@/types/collections';
 import { IUserStateData } from '@/types/user';
@@ -34,7 +24,6 @@ setPersistence(auth, browserLocalPersistence);
 
 // Collections
 const ingredientsCollection = collection(db, Collections.INGREDIENTS);
-const usersCollection = collection(db, Collections.USERS);
 const recipesCollection = collection(db, Collections.RECIPES);
 
 // Legacy exports - delegating to centralized services
@@ -48,7 +37,6 @@ export {
   app,
   db,
   auth,
-  usersCollection,
   ingredientsCollection,
   recipesCollection,
   getUserQuery,
