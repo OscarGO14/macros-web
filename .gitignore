@@ -33,8 +33,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# claude code
+# AI
 .claude
+CLAUDE.md
+.windsurf
+AGENTS.md
+.agents
 
 # vercel
 .vercel
